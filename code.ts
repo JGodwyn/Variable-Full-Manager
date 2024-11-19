@@ -89,7 +89,7 @@ async function getVariables() {
           if (referencedVar) {
             referenceName = referencedVar.name;
             // Get the value directly from our primitive map
-            value = primitiveVarMap.get(referenceName);
+            value = primitiveVarMap.get(referenceName) || (modeId !== undefined ? referencedVar.valuesByMode[modeId] : null);
           }
         }
 
