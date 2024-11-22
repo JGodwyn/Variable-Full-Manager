@@ -5,12 +5,12 @@
       @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
       body {
         margin: 0;
-        padding: 0;
+        padding-bottom: 80;
         background-color: white;
         width: 100%;
         height: 100%;
         min-width: 240px;
-        min-height: 300px;
+        min-height: 400px;
         position: relative;
         overflow: hidden;
         box-sizing: border-box;
@@ -19,11 +19,12 @@
 
       .variable-list {
         width: 100%;
-        height: calc(100% - 40px);
+        height: calc(100% - 80px);
         overflow-y: auto;
         overflow-x: hidden;
         box-sizing: border-box;
         padding: 16px;
+        padding-bottom: 32px;
       }
 
       .empty-message {
@@ -64,16 +65,18 @@
       .variable-item {
         display: flex;
         justify-content: space-between;
-        align-items: center;
-        padding: 8px;
+        align-items: start;
+        padding: 12px;
         margin-bottom: 8px;
         border: 1px solid #e5e5e5;
-        border-radius: 4px;
+        border-radius: 8px;
         box-sizing: border-box;
+        gap: 8px;
       }
 
       .variable-name {
         font-weight: 500;
+        font-size: 14px;
       }
 
       .variable-value {
@@ -92,12 +95,13 @@
       }
 
       .collection-dropdown {
-        width: 100%;
+        width: calc(100% - 32px);
         padding: 8px;
+        padding-right: 24px;
         box-sizing: border-box;
         border: 1px solid #e5e5e5;
         border-radius: 4px;
-        margin-bottom: 8px;
+        margin: 16px;
       }
     </style>
   </head>
@@ -107,7 +111,33 @@
       <option value="all">All Collections</option>
     </select>
 
-    <div id="variableList" class="variable-list">
+    <input
+      type="text"
+      id="searchBar"
+      placeholder="Search variables..."
+      style="
+        width: calc(100% - 32px);
+        padding: 8px 16px 8px 12px;
+        margin: 0 16px;
+        box-sizing: border-box;
+        margin-bottom: 8px;
+        border-radius: 8px;
+        background-color: #f5f5f5;
+        border: 1px solid #d3d3d3;
+      "
+    />
+
+    <div
+      id="variableCount"
+      style="
+        margin: 16px 16px 8px 16px;
+        font-size: 20px;
+        color: #333;
+        font-weight: bold;
+      "
+    ></div>
+
+    <div id="variableList" class="variable-list" style="cursor: pointer">
       <div class="empty-message">
         <div class="loading">Loading variables...</div>
       </div>
@@ -132,6 +162,7 @@
         const variableList = document.getElementById('variableList');
         const collectionDropdown =
           document.getElementById('collectionDropdown');
+        const searchBar = document.getElementById('searchBar');
 
         switch (message.type) {
           case 'init-resize':
@@ -157,8 +188,13 @@
               return acc;
             }, {});
 
+            // Sort collections alphabetically
+            const sortedCollections = message.collections.sort((a, b) =>
+              a.localeCompare(b),
+            );
+
             // Populate dropdown
-            message.collections.forEach((collection) => {
+            sortedCollections.forEach((collection) => {
               const option = document.createElement('option');
               option.value = collection;
               option.textContent = collection;
@@ -176,11 +212,15 @@
 
       function displayVariables(variables) {
         const variableList = document.getElementById('variableList');
+        const variableCount = document.getElementById('variableCount');
         variableList.innerHTML = '';
+
+        variableCount.textContent = `${variables.length} variables found`;
 
         if (variables.length === 0) {
           variableList.innerHTML =
             '<div class="empty-message">No variables found</div>';
+          variableCount.textContent = '';
           return;
         }
 
@@ -244,6 +284,19 @@
           div.appendChild(valueContainer);
           variableList.appendChild(div);
         });
+
+        // Add click event listener to copy variables
+        variableList.addEventListener('click', () => {
+          const variableText = variables.join(', '); // Join variables into a single string
+          navigator.clipboard
+            .writeText(variableText)
+            .then(() => {
+              alert('Variables copied to clipboard!'); // Optional: alert on successful copy
+            })
+            .catch((err) => {
+              console.error('Failed to copy: ', err);
+            });
+        });
       }
 
       function rgbToHex(r, g, b) {
@@ -267,6 +320,41 @@
           } else {
             displayVariables(collectionMap[selectedCollection] || []);
           }
+        });
+
+      // Add search functionality
+      document
+        .getElementById('searchBar')
+        .addEventListener('input', (event) => {
+          const searchTerm = event.target.value.toLowerCase();
+          const selectedCollection = collectionDropdown.value;
+          let filteredVariables;
+
+          if (selectedCollection === 'all') {
+            // Search through all variables
+            filteredVariables = allVariables.filter((variable) => {
+              const variableValue =
+                variable.value !== null ? String(variable.value) : ''; // Convert value to string
+              return (
+                variable.name.toLowerCase().includes(searchTerm) ||
+                variableValue.toLowerCase().includes(searchTerm)
+              );
+            });
+          } else {
+            // Search through the selected collection
+            filteredVariables = collectionMap[selectedCollection].filter(
+              (variable) => {
+                const variableValue =
+                  variable.value !== null ? String(variable.value) : ''; // Convert value to string
+                return (
+                  variable.name.toLowerCase().includes(searchTerm) ||
+                  variableValue.toLowerCase().includes(searchTerm)
+                );
+              },
+            );
+          }
+
+          displayVariables(filteredVariables);
         });
     </script>
   </body>

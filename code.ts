@@ -1,10 +1,11 @@
+/// <reference types="@figma/plugin-typings" />
+
 // State for resize functionality
 let isResizing = false;
 let _startWidth: number;
 let startX: number;
 let windowWidth: number;
 let isLeftResize = false;
-
 // Show the UI with initial size
 figma.showUI(__html__, { 
   width: 320,  // Slightly wider to fit content
