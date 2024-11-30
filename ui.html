@@ -103,6 +103,49 @@
         border-radius: 4px;
         margin: 16px;
       }
+
+      .notification {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: #333;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 4px;
+        z-index: 1000;
+        animation: fadeIn 0.3s ease-in-out;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translate(-50%, 20px);
+        }
+        to {
+          opacity: 1;
+          transform: translate(-50%, 0);
+        }
+      }
+
+      .fade-out {
+        animation: fadeOut 0.3s ease-in-out;
+      }
+
+      @keyframes fadeOut {
+        from {
+          opacity: 1;
+          transform: translate(-50%, 0);
+        }
+        to {
+          opacity: 0;
+          transform: translate(-50%, 20px);
+        }
+      }
+
+      .variable-item:hover {
+        background-color: #f0f0f0;
+      }
     </style>
   </head>
 
@@ -283,19 +326,6 @@
           div.appendChild(name);
           div.appendChild(valueContainer);
           variableList.appendChild(div);
-        });
-
-        // Add click event listener to copy variables
-        variableList.addEventListener('click', () => {
-          const variableText = variables.join(', '); // Join variables into a single string
-          navigator.clipboard
-            .writeText(variableText)
-            .then(() => {
-              alert('Variables copied to clipboard!'); // Optional: alert on successful copy
-            })
-            .catch((err) => {
-              console.error('Failed to copy: ', err);
-            });
         });
       }
 

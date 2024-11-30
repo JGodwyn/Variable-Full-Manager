@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /// <reference types="@figma/plugin-typings" />
 
 // State for resize functionality
@@ -184,3 +185,102 @@ figma.ui.postMessage({
 
 // Start loading variables
 getVariables();
+
+
+function displayVariables(variables: MappedVariable[]) {
+  const variableList = document.getElementById('variableList');
+  const variableCount = document.getElementById('variableCount');
+
+  function showNotification(message: string) {
+  const notification = document.createElement('div');
+  notification.className = 'notification';
+  notification.textContent = message;
+  document.body.appendChild(notification);
+
+  // Remove notification after animation
+  setTimeout(() => {
+    notification.classList.add('fade-out');
+    setTimeout(() => {
+      document.body.removeChild(notification);
+    }, 300);
+  }, 2000);
+}
+
+  // Fallback clipboard copy function
+  function fallbackCopyTextToClipboard(text: string) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    
+    // Make the textarea out of viewport
+    textArea.style.position = 'fixed';
+    textArea.style.top = '0';
+    textArea.style.left = '0';
+    textArea.style.width = '2em';
+    textArea.style.height = '2em';
+    textArea.style.padding = '0';
+    textArea.style.border = 'none';
+    textArea.style.outline = 'none';
+    textArea.style.boxShadow = 'none';
+    textArea.style.background = 'transparent';
+
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+
+    try {
+      const successful = document.execCommand('copy');
+      const msg = successful ? 'successful' : 'unsuccessful';
+      console.log(`Fallback: Copying text was ${msg}`);
+    } catch (err) {
+      console.error('Fallback copy failed', err);
+    }
+
+    document.body.removeChild(textArea);
+  }
+
+  // Check if variableList is not null before proceeding
+  if (variableList) {
+    variableList.innerHTML = '';
+
+    // Update the variable count display
+    if (variableCount) {
+      variableCount.textContent = variables.length.toString();
+    }
+    
+    if (variables.length === 0) {
+      variableList.innerHTML = '<div class="empty-message">No variables found</div>';
+      if (variableCount) {
+        variableCount.textContent = '0';
+      }
+      return;
+    }
+
+    variables.forEach((variable: MappedVariable) => {
+      const variableDiv = document.createElement('div');
+      variableDiv.textContent = variable.name;
+      variableDiv.style.cursor = 'pointer';
+      variableDiv.className = 'variable-item';
+      
+      // Add click event listener with clipboard functionality
+      variableDiv.addEventListener('click', () => {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(variable.name)
+            .then(() => {
+              showNotification(`Copied "${variable.name}" to clipboard!`);
+            })
+            .catch(err => {
+              console.error('Failed to copy: ', err);
+              fallbackCopyTextToClipboard(variable.name);
+            });
+        } else {
+          fallbackCopyTextToClipboard(variable.name);
+        }
+      });
+
+      variableList.appendChild(variableDiv);
+    });
+
+  } else {
+    console.error('variableList element not found');
+  }
+}
